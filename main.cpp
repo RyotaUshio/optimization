@@ -18,8 +18,9 @@ int main()
 	    // objective function itself
 	    [](VectorXd x) -> double
 	    {
-	      return std::pow(100 * (x(1)-x(0)*x(0)), 2) + std::pow(1 - x(0), 2);
+	      return 100 * std::pow(x(1)-x(0)*x(0), 2) + std::pow(1 - x(0), 2);
 	    },
+	    
 	    // gradient
 	    [](VectorXd x) -> VectorXd 
 	    {
@@ -28,6 +29,7 @@ int main()
 		200 * (x(1) - x(0)*x(0));
 	      return g;
 	    },
+	    
 	    // Hessian matrix
 	    [](VectorXd x) -> MatrixXd
 	    {
@@ -40,9 +42,10 @@ int main()
 	    }
 	    );
 
+
   problem prob(f);
-  gradientDescent solver;
-  solver.eps = 0.0000001;
+  gradientDescent solver(true);
+  solver.eps = 0.0001;
   VectorXd x_star = solver(prob, x0);
   std::cout << x_star << std::endl;
 }
