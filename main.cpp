@@ -23,7 +23,7 @@ VectorXd grad(VectorXd x)
   return g;
 }
 
-// hessian matrix
+// Hessian matrix
 MatrixXd hesse(VectorXd x)
 {
   MatrixXd h(2, 2);

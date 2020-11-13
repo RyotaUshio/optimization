@@ -25,7 +25,7 @@ namespace Continuous {
     //// objective function class
     const funcType func; // objective function itself
     const gradType grad; // gradient
-    const hesseType hesse; // hessian matrix
+    const hesseType hesse; // Hessian matrix
 
 
     objFunc(funcType f)
