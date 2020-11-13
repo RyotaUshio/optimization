@@ -44,7 +44,7 @@ int main()
   objFunc f(func, grad, hesse);
   problem prob(f);
   gradientDescent solver;
-  solver.eps = 0.000000000001;
+  solver.eps = 0.1;
   VectorXd x_star = solver(prob, x0);
   std::cout << x_star << std::endl;
 }

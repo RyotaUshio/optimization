@@ -58,11 +58,12 @@ namespace Continuous {
   // Optimization problem class
   struct problem {
     objFunc f;
-    eqConstraint g;
-    ineqConstraint h;
+    constraint* c;
 
-    problem(objFunc func)
+    problem(objFunc& func)
       : f(func) {}
+    problem(objFunc& func, constraint& cons)
+      : f(func), c(&cons) {}
   };
 
 
@@ -77,33 +78,36 @@ namespace Continuous {
       : eps(std::pow(10, -8)) {}
 
 
-    bool converge(problem prob, VectorXd x) // convergence test
+    bool converge(problem& prob, VectorXd x) // convergence test
     {
+      std::printf("in converge(): %p\n", &x);
       double grad_norm = (prob.f.grad(x)).norm();
       return (grad_norm < eps);
     }
 
     
-    VectorXd operator()(problem prob, VectorXd x0) // body
+    VectorXd operator()(problem& prob, VectorXd x0) // body
     {
       VectorXd x = x0;
+      std::printf("in oprator(): %p\n", &x);
       while (not converge(prob, x))      
 	x = update(prob, x);	
       return x;
     }
 
-    virtual VectorXd update(problem prob, VectorXd x)=0; // updates approximate solution x
+    virtual VectorXd update(problem& prob, VectorXd x)=0; // updates approximate solution x
   };
 
   
 
   //// base class for solver with line search algorithm
   struct lineSearchSolver: public iterativeSolver {
-    virtual VectorXd dir(problem prob, VectorXd x)=0; // computes searching direction
-    virtual double alpha(problem prob, VectorXd x, VectorXd d)=0; // computes step size
+    virtual VectorXd dir(problem& prob, VectorXd x)=0; // computes searching direction
+    virtual double alpha(problem& prob, VectorXd x, VectorXd d)=0; // computes step size
     
-    VectorXd update(problem prob, VectorXd x) override
+    VectorXd update(problem& prob, VectorXd x) override
     {
+      std::printf("in update(): %p\n", &x);
       VectorXd d = dir(prob, x);
       double a = alpha(prob, x, d);
       return x + a*d;
@@ -126,7 +130,7 @@ namespace Continuous {
 
 
     // armijo's condition
-    bool Armijo(problem prob, VectorXd x, double a, VectorXd d)
+    bool Armijo(problem& prob, VectorXd x, double a, VectorXd d)
     {
       double lhs, rhs;
       lhs = ( prob.f.grad(x + a*d) ).dot( d );
@@ -136,14 +140,14 @@ namespace Continuous {
 
 
     // search direction d
-    VectorXd dir(problem prob, VectorXd x)
+    VectorXd dir(problem& prob, VectorXd x)
     {
       VectorXd grad = prob.f.grad(x);
       return -grad;
     }
 
     // step size alpha
-    double alpha(problem prob, VectorXd x, VectorXd d)
+    double alpha(problem& prob, VectorXd x, VectorXd d)
     {
       double a = alpha0;
       while(not Armijo(prob, x, a, d))
