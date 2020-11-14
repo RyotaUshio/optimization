@@ -13,7 +13,7 @@ int main()
   int n = 20;
   
   // initial guess
-  VectorXd x0 = VectorXd::Constant(n, 120);
+  VectorXd x0 = VectorXd::Constant(n, 12);
   
   // objective function definition
   auto g = [](int n) -> objFunc
@@ -47,7 +47,7 @@ int main()
       MatrixXd h = MatrixXd::Zero(n, n);
       for(int i=0; i<n-1; i++)
 	{
-	  h(i, i)     +=  400 * (x(i)*x(i) + 2*x(i) - x(i+1)) + 2;
+	  h(i, i)     +=  400 * (3*x(i)*x(i) - x(i+1)) + 2;
 	  h(i, i+1)   += -400*x(i);
 	  h(i+1, i)   += -400*x(i);
 	  h(i+1, i+1) +=  200;
@@ -59,7 +59,8 @@ int main()
   
   objFunc g_n = g(n);
   problem prob(g_n);
-  gradientDescent solver(true);
+  //gradientDescent solver(true);
+  Newton solver;
   VectorXd x_star = solver(prob, x0);
   std::cout << x_star << std::endl;
 }

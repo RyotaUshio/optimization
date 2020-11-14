@@ -7,7 +7,7 @@
 #include <vector>
 #include <cmath>
 #include <cstdio>
-#include <Eigen/Core>
+#include <Eigen/Dense>
 
 using std::cout;
 using std::cerr;
@@ -95,6 +95,7 @@ namespace Continuous {
       VectorXd x = x0;
       while (not converge(prob, x))
 	x = update(prob, x);
+
       return x;
     }
     
@@ -154,15 +155,14 @@ namespace Continuous {
 
 
     // search direction d
-    VectorXd dir(problem& prob, VectorXd& x)
+    VectorXd dir(problem& prob, VectorXd& x) override
     {
-      VectorXd grad = prob.f.grad(x);
-      return -grad;
+      return - prob.f.grad(x);
     }
 
 
     // step size alpha
-    double alpha(problem& prob, VectorXd& x, VectorXd& d)
+    double alpha(problem& prob, VectorXd& x, VectorXd& d) override
     {
       return use_wolfe ? alpha_wolfe(prob, x, d) : alpha_armijo(prob, x, d);
     }
@@ -195,6 +195,21 @@ namespace Continuous {
     }
   };
 
+
+  struct Newton: public lineSearchSolver {
+
+    // search direction d
+    VectorXd dir(problem& prob, VectorXd& x) override
+    {
+      return (prob.f.hesse(x)).colPivHouseholderQr().solve(-(prob.f.grad(x)));
+    }
+
+    // step size alpha
+    double alpha(problem& prob, VectorXd& x, VectorXd& d) override
+    {
+      return 1.0;
+    }
+  };
   
 }
 

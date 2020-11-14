@@ -34,7 +34,7 @@ int main()
 	    [](VectorXd x) -> MatrixXd
 	    {
 	      MatrixXd h(2, 2);
-	      h << 400 * (x(0)*x(0) + 2*x(0) - x(1)) + 2,
+	      h << 400 * (3*x(0)*x(0) - x(1)) + 2,
 		-400*x(0),
 		-400*x(0),
 		200;
@@ -44,7 +44,8 @@ int main()
 
 
   problem prob(f);
-  gradientDescent solver;
+  //gradientDescent solver;
+  Newton solver;
   VectorXd x_star = solver(prob, x0);
   std::cout << x_star << std::endl;
 }
