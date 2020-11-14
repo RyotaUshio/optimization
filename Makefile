@@ -1,7 +1,7 @@
 CXX = g++
-CXXFLAGS = -std=c++17 -O3 -I/usr/include/eigen3
+CXXFLAGS = -std=c++17 -O3 -I/usr/include/eigen3 -g
 
-all: main
+all: main main2	
 
 %: %.cpp continuous.hpp
 	$(CXX) $(CXXFLAGS) -o $@ $<
