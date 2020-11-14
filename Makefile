@@ -1,7 +1,13 @@
+UNAME := $(shell uname)
+ifeq ($(UNAME), Linux)
+EIGEN_PATH = /usr/include/eigen3
+endif
+ifeq ($(UNAME), Darwin)
+EIGEN_PATH = /usr/local/include/eigen3
+endif
+
 CXX = g++
-CXXFLAGS = -std=c++17 -O3 -I/usr/include/eigen3 -g
-# If you are using MacOS, this should be
-# CXXFLAGS = -std=c++17 -O3 -I/usr/local/include/eigen3 -g
+CXXFLAGS = -std=c++17 -O3 -I$(EIGEN_PATH) -g
 
 all: main main2	
 
