@@ -1,7 +1,4 @@
 #include "continuous.hpp"
-#include <iostream>
-#include <cmath>
-
 using namespace Continuous;
 
 
