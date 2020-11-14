@@ -86,6 +86,7 @@ namespace Continuous {
     bool converge(problem& prob, VectorXd& x) // convergence test
     {
       double grad_norm = (prob.f.grad(x)).norm();
+      cout << "grad_norm = " << grad_norm << endl;
       return (grad_norm < eps);
     }
 
@@ -122,9 +123,15 @@ namespace Continuous {
 
     
     virtual VectorXd dir(problem& prob, VectorXd& x)=0; // computes searching direction
-    virtual double alpha(problem& prob, VectorXd& x, VectorXd& d)=0; // computes step size
 
-        // Armijo's condition
+    // step size alpha
+    virtual double alpha(problem& prob, VectorXd& x, VectorXd& d)
+    {
+      return use_wolfe ? alpha_wolfe(prob, x, d) : alpha_armijo(prob, x, d);
+    }
+    
+
+    // Armijo's condition
     bool Armijo(problem& prob, VectorXd& x, double a, VectorXd& d)
     {
       double lhs, rhs;
@@ -144,7 +151,7 @@ namespace Continuous {
     }
 
 
-        double alpha_armijo(problem& prob, VectorXd& x, VectorXd& d)
+    double alpha_armijo(problem& prob, VectorXd& x, VectorXd& d)
     {
       double a = alpha0;
       while(not Armijo(prob, x, a, d))
@@ -176,6 +183,7 @@ namespace Continuous {
     {
       VectorXd d = dir(prob, x);
       double a = alpha(prob, x, d);
+      cout << "a = " << a << endl;
       return x + a*d;
     }
   };
@@ -184,26 +192,24 @@ namespace Continuous {
   // gradient descent solver class
   struct gradientDescent: public lineSearchSolver {
 
-
-
+    gradientDescent(bool wolfe=false)
+      : lineSearchSolver(wolfe) {}
 
     // search direction d
     VectorXd dir(problem& prob, VectorXd& x) override
     {
       return - prob.f.grad(x);
     }
-
-
-    // step size alpha
-    double alpha(problem& prob, VectorXd& x, VectorXd& d) override
-    {
-      return use_wolfe ? alpha_wolfe(prob, x, d) : alpha_armijo(prob, x, d);
-    }
   };
 
 
   struct NewtonsMethod: public lineSearchSolver {
 
+    bool use_line_search;
+
+    NewtonsMethod(bool line_search=false, bool wolfe=false)
+      : lineSearchSolver(wolfe), use_line_search(line_search) {}
+    
     // search direction d
     VectorXd dir(problem& prob, VectorXd& x) override
     {
@@ -213,7 +219,7 @@ namespace Continuous {
     // step size alpha
     double alpha(problem& prob, VectorXd& x, VectorXd& d) override
     {
-      return 1.0;
+      return (not use_line_search) ? 1.0 : lineSearchSolver::alpha(prob, x, d);
     }
   };
   

@@ -11,7 +11,7 @@ int main()
   int n = 20;
   
   // initial guess
-  VectorXd x0 = VectorXd::Constant(n, 100);
+  VectorXd x0 = VectorXd::Constant(n, 5);
   
   // objective function definition
   auto g = [](int n) -> objFunc
@@ -58,7 +58,7 @@ int main()
   objFunc g_n = g(n);
   problem prob(g_n);
   //gradientDescent solver(true);
-  NewtonsMethod solver;
+  NewtonsMethod solver(true, false);
   VectorXd x_star = solver(prob, x0);
   std::cout << x_star << std::endl;
 }
