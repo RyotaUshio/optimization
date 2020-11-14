@@ -44,8 +44,7 @@ int main()
 
 
   problem prob(f);
-  gradientDescent solver(true);
-  solver.eps = 0.0001;
+  gradientDescent solver;
   VectorXd x_star = solver(prob, x0);
   std::cout << x_star << std::endl;
 }

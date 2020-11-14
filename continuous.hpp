@@ -90,11 +90,11 @@ namespace Continuous {
     }
 
     
-    VectorXd operator()(problem& prob, VectorXd& x0, bool log=false) // body
+    VectorXd operator()(problem& prob, VectorXd& x0) // body
     {
       VectorXd x = x0;
       while (not converge(prob, x))
-	x = update(prob, x);      
+	x = update(prob, x);
       return x;
     }
     
@@ -128,12 +128,12 @@ namespace Continuous {
     double rho; // 縮小率
     double alpha0; // initial step size
 
-    
+
     gradientDescent(bool wolfe=false)
       : c1(0.0001), c2(0.9), rho(0.5), alpha0(1.0), use_wolfe(wolfe) {}
 
 
-    // armijo's condition
+    // Armijo's condition
     bool Armijo(problem& prob, VectorXd& x, double a, VectorXd& d)
     {
       double lhs, rhs;
@@ -142,6 +142,7 @@ namespace Continuous {
       return lhs <= rhs;
     }
 
+    
     // curvature condition of Wolfe's condition
     bool curvature_condition(problem& prob, VectorXd& x, double a, VectorXd& d)
     {
@@ -158,6 +159,7 @@ namespace Continuous {
       VectorXd grad = prob.f.grad(x);
       return -grad;
     }
+
 
     // step size alpha
     double alpha(problem& prob, VectorXd& x, VectorXd& d)
@@ -177,19 +179,20 @@ namespace Continuous {
     {
       double amin = 0;
       double amax = alpha0;
+      while (Armijo(prob, x, amax, d))
+	amax *= 2.0;
       double a;
       while (true)
 	{
 	  a = (amin + amax) / 2.0;
 	  if (not Armijo(prob, x, a, d))
 	    amax = a;
-	  else if (curvature_condition(prob, x, a, d))
+	  else if (curvature_condition(prob, x, a, d))	    
 	    return a;
 	  else
 	    amin = a;
 	}
     }
-    
   };
 
   
