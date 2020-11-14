@@ -106,21 +106,8 @@ namespace Continuous {
 
   //// base class for solver with line search algorithm
   struct lineSearchSolver: public iterativeSolver {
-    virtual VectorXd dir(problem& prob, VectorXd& x)=0; // computes searching direction
-    virtual double alpha(problem& prob, VectorXd& x, VectorXd& d)=0; // computes step size
-    
-    VectorXd update(problem& prob, VectorXd& x) override
-    {
-      VectorXd d = dir(prob, x);
-      double a = alpha(prob, x, d);
-      return x + a*d;
-    }
-  };
 
-  // git test
-  // gradient descent solver class
-  struct gradientDescent: public lineSearchSolver {
-    // whether use Wolfe's condition or not
+      // whether use Wolfe's condition or not
     bool use_wolfe;
     // constants in Wolfe's condition
     double c1; // 減少条件
@@ -130,11 +117,14 @@ namespace Continuous {
     double alpha0; // initial step size
 
 
-    gradientDescent(bool wolfe=false)
+    lineSearchSolver(bool wolfe=false)
       : c1(0.0001), c2(0.9), rho(0.5), alpha0(1.0), use_wolfe(wolfe) {}
 
+    
+    virtual VectorXd dir(problem& prob, VectorXd& x)=0; // computes searching direction
+    virtual double alpha(problem& prob, VectorXd& x, VectorXd& d)=0; // computes step size
 
-    // Armijo's condition
+        // Armijo's condition
     bool Armijo(problem& prob, VectorXd& x, double a, VectorXd& d)
     {
       double lhs, rhs;
@@ -154,20 +144,7 @@ namespace Continuous {
     }
 
 
-    // search direction d
-    VectorXd dir(problem& prob, VectorXd& x) override
-    {
-      return - prob.f.grad(x);
-    }
-
-
-    // step size alpha
-    double alpha(problem& prob, VectorXd& x, VectorXd& d) override
-    {
-      return use_wolfe ? alpha_wolfe(prob, x, d) : alpha_armijo(prob, x, d);
-    }
-
-    double alpha_armijo(problem& prob, VectorXd& x, VectorXd& d)
+        double alpha_armijo(problem& prob, VectorXd& x, VectorXd& d)
     {
       double a = alpha0;
       while(not Armijo(prob, x, a, d))
@@ -193,10 +170,39 @@ namespace Continuous {
 	    amin = a;
 	}
     }
+
+    
+    VectorXd update(problem& prob, VectorXd& x) override
+    {
+      VectorXd d = dir(prob, x);
+      double a = alpha(prob, x, d);
+      return x + a*d;
+    }
+  };
+
+  
+  // gradient descent solver class
+  struct gradientDescent: public lineSearchSolver {
+
+
+
+
+    // search direction d
+    VectorXd dir(problem& prob, VectorXd& x) override
+    {
+      return - prob.f.grad(x);
+    }
+
+
+    // step size alpha
+    double alpha(problem& prob, VectorXd& x, VectorXd& d) override
+    {
+      return use_wolfe ? alpha_wolfe(prob, x, d) : alpha_armijo(prob, x, d);
+    }
   };
 
 
-  struct Newton: public lineSearchSolver {
+  struct NewtonsMethod: public lineSearchSolver {
 
     // search direction d
     VectorXd dir(problem& prob, VectorXd& x) override
