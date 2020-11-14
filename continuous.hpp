@@ -86,7 +86,6 @@ namespace Continuous {
     bool converge(problem& prob, VectorXd& x) // convergence test
     {
       double grad_norm = (prob.f.grad(x)).norm();
-      cout << "grad_norm = " << grad_norm << endl;
       return (grad_norm < eps);
     }
 
@@ -183,7 +182,6 @@ namespace Continuous {
     {
       VectorXd d = dir(prob, x);
       double a = alpha(prob, x, d);
-      cout << "a = " << a << endl;
       return x + a*d;
     }
   };
