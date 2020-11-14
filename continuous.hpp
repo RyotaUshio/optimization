@@ -107,7 +107,7 @@ namespace Continuous {
   //// base class for solver with line search algorithm
   struct lineSearchSolver: public iterativeSolver {
 
-      // whether use Wolfe's condition or not
+    // whether use Wolfe's condition or not
     bool use_wolfe;
     // constants in Wolfe's condition
     double c1; // 減少条件
@@ -150,6 +150,7 @@ namespace Continuous {
     }
 
 
+    // backtracking
     double alpha_armijo(problem& prob, VectorXd& x, VectorXd& d)
     {
       double a = alpha0;
@@ -158,6 +159,7 @@ namespace Continuous {
       return a;
     }
 
+    // return alpha that satisfying Wolfe's condition
     double alpha_wolfe(problem& prob, VectorXd& x, VectorXd& d)
     {
       double amin = 0;
@@ -187,13 +189,13 @@ namespace Continuous {
   };
 
   
-  // gradient descent solver class
+  //// Gradient Descent solver class
   struct gradientDescent: public lineSearchSolver {
 
     gradientDescent(bool wolfe=false)
       : lineSearchSolver(wolfe) {}
 
-    // search direction d
+    // search direction d: steepest descent direction
     VectorXd dir(problem& prob, VectorXd& x) override
     {
       return - prob.f.grad(x);
@@ -201,6 +203,7 @@ namespace Continuous {
   };
 
 
+  //// Newton's Method solver class
   struct NewtonsMethod: public lineSearchSolver {
 
     bool use_line_search;
@@ -208,13 +211,13 @@ namespace Continuous {
     NewtonsMethod(bool line_search=false, bool wolfe=false)
       : lineSearchSolver(wolfe), use_line_search(line_search) {}
     
-    // search direction d
+    // search direction d: the Newton direction
     VectorXd dir(problem& prob, VectorXd& x) override
     {
       return (prob.f.hesse(x)).colPivHouseholderQr().solve(-(prob.f.grad(x)));
     }
 
-    // step size alpha
+    // step size alpha: fixed to 1.0 or obtained with Armijo/Wolfe's method
     double alpha(problem& prob, VectorXd& x, VectorXd& d) override
     {
       return (not use_line_search) ? 1.0 : lineSearchSolver::alpha(prob, x, d);
