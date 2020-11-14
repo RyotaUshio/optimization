@@ -1,9 +1,7 @@
-#include <Eigen/Core>
 #include "continuous.hpp"
 #include <iostream>
 #include <cmath>
 
-using namespace Eigen;
 using namespace Continuous;
 
 
@@ -13,7 +11,7 @@ int main()
   int n = 20;
   
   // initial guess
-  VectorXd x0 = VectorXd::Constant(n, 12);
+  VectorXd x0 = VectorXd::Constant(n, 100);
   
   // objective function definition
   auto g = [](int n) -> objFunc
@@ -60,7 +58,7 @@ int main()
   objFunc g_n = g(n);
   problem prob(g_n);
   //gradientDescent solver(true);
-  Newton solver;
+  NewtonsMethod solver;
   VectorXd x_star = solver(prob, x0);
   std::cout << x_star << std::endl;
 }
