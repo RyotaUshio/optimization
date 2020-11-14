@@ -117,7 +117,7 @@ namespace Continuous {
     }
   };
 
-  
+  // git test
   // gradient descent solver class
   struct gradientDescent: public lineSearchSolver {
     // whether use Wolfe's condition or not
