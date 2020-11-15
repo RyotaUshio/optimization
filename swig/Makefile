@@ -1,4 +1,4 @@
-PYTHON_VERSION = 3.6
+PYTHON_VERSION = 2.7
 
 UNAME := $(shell uname)
 ifeq ($(UNAME), Linux)
