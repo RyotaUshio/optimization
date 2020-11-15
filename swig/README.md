@@ -5,13 +5,9 @@ C++で書かれた本ライブラリをPythonから呼び出すには、SWIGを�
 
 ビルド方法
 -----
-- Ubuntu 18.04
 ```
-$ swig -c++ -python -I/usr/include/eigen3 continuous.i 
-$ g++ -shared -fPIC -I./ -I/usr/include/python2.7 -I/usr/include/eigen3 -o _continuous.so continuous_wrap.cxx continuous.cpp -lm -lstdc++
+$ make
 ```
-- MacOS Mojave
-
 
 インポート
 ---
