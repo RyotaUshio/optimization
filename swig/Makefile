@@ -1,3 +1,5 @@
+PYTHON_VERSION = 3.6
+
 UNAME := $(shell uname)
 ifeq ($(UNAME), Linux)
 EIGEN_PATH = /usr/include/eigen3
@@ -6,7 +8,7 @@ ifeq ($(UNAME), Darwin)
 EIGEN_PATH = /usr/local/include/eigen3
 endif
 
-PYTHON_INCLUDE_PATH = /usr/include/python2.7
+PYTHON_INCLUDE_PATH = /usr/include/python$(PYTHON_VERSION)
 CXX = g++
 
 

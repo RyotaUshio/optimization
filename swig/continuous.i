@@ -1,5 +1,5 @@
 %module continuous
 %{
-  #include "continuous.hpp"
+  #include "../tmp/continuous.hpp"
 %}
-%include "continuous.hpp"
+%include "../tmp/continuous.hpp"
