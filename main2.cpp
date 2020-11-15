@@ -1,11 +1,14 @@
+#include <iostream>
 #include "continuous.hpp"
+
 using namespace Continuous;
+using namespace Eigen;
 
 
 int main()
 {
   // dimension of x \in R^n
-  int n = 20;
+  int n = 100;
   
   // initial guess
   VectorXd x0 = VectorXd::Constant(n, 5);

@@ -1,5 +1,7 @@
+#include <iostream>
 #include "continuous.hpp"
 using namespace Continuous;
+using namespace Eigen;
 
 
 int main()

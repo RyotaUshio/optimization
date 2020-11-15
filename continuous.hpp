@@ -2,20 +2,14 @@
 #define __CONTINUOUS_HPP_INCLUDED__
 
 
-#include <iostream>
 #include <functional>
 #include <vector>
 #include <cmath>
-#include <cstdio>
 #include <Eigen/Dense>
 
-using std::cout;
-using std::cerr;
-using std::endl;
-using namespace Eigen;
-using funcType = std::function<double(VectorXd)>;
-using gradType = std::function<VectorXd(VectorXd)>;
-using hesseType = std::function<MatrixXd(VectorXd)>;
+using funcType = std::function<double(Eigen::VectorXd)>;
+using gradType = std::function<Eigen::VectorXd(Eigen::VectorXd)>;
+using hesseType = std::function<Eigen::MatrixXd(Eigen::VectorXd)>;
 
 
 namespace Continuous {
@@ -35,7 +29,7 @@ namespace Continuous {
     objFunc(funcType f, gradType g, hesseType h)
       : func(f), grad(g), hesse(h) {}
 
-    double operator()(VectorXd x) const
+    double operator()(Eigen::VectorXd x) const
     {
       return func(x);
     }
@@ -83,23 +77,23 @@ namespace Continuous {
       : eps(std::pow(10, -8)) {}
 
 
-    bool converge(problem& prob, VectorXd& x) // convergence test
+    bool converge(problem& prob, Eigen::VectorXd& x) // convergence test
     {
       double grad_norm = (prob.f.grad(x)).norm();
       return (grad_norm < eps);
     }
 
     
-    VectorXd operator()(problem& prob, VectorXd& x0) // body
+    Eigen::VectorXd operator()(problem& prob, Eigen::VectorXd& x0) // body
     {
-      VectorXd x = x0;
+      Eigen::VectorXd x = x0;
       while (not converge(prob, x))
 	x = update(prob, x);
 
       return x;
     }
     
-    virtual VectorXd update(problem& prob, VectorXd& x)=0; // updates approximate solution x
+    virtual Eigen::VectorXd update(problem& prob, Eigen::VectorXd& x)=0; // updates approximate solution x
   };
 
   
@@ -121,17 +115,17 @@ namespace Continuous {
       : c1(0.0001), c2(0.9), rho(0.5), alpha0(1.0), use_wolfe(wolfe) {}
 
     
-    virtual VectorXd dir(problem& prob, VectorXd& x)=0; // computes searching direction
+    virtual Eigen::VectorXd dir(problem& prob, Eigen::VectorXd& x)=0; // computes searching direction
 
     // step size alpha
-    virtual double alpha(problem& prob, VectorXd& x, VectorXd& d)
+    virtual double alpha(problem& prob, Eigen::VectorXd& x, Eigen::VectorXd& d)
     {
       return use_wolfe ? alpha_wolfe(prob, x, d) : alpha_armijo(prob, x, d);
     }
     
 
     // Armijo's condition
-    bool Armijo(problem& prob, VectorXd& x, double a, VectorXd& d)
+    bool Armijo(problem& prob, Eigen::VectorXd& x, double a, Eigen::VectorXd& d)
     {
       double lhs, rhs;
       lhs = prob.f(x + a*d);
@@ -141,7 +135,7 @@ namespace Continuous {
 
     
     // curvature condition of Wolfe's condition
-    bool curvature_condition(problem& prob, VectorXd& x, double a, VectorXd& d)
+    bool curvature_condition(problem& prob, Eigen::VectorXd& x, double a, Eigen::VectorXd& d)
     {
       double lhs, rhs;
       lhs = (prob.f.grad(x + a*d)).dot(d);
@@ -151,7 +145,7 @@ namespace Continuous {
 
 
     // backtracking
-    double alpha_armijo(problem& prob, VectorXd& x, VectorXd& d)
+    double alpha_armijo(problem& prob, Eigen::VectorXd& x, Eigen::VectorXd& d)
     {
       double a = alpha0;
       while(not Armijo(prob, x, a, d))
@@ -160,7 +154,7 @@ namespace Continuous {
     }
 
     // return alpha that satisfying Wolfe's condition
-    double alpha_wolfe(problem& prob, VectorXd& x, VectorXd& d)
+    double alpha_wolfe(problem& prob, Eigen::VectorXd& x, Eigen::VectorXd& d)
     {
       double amin = 0;
       double amax = alpha0;
@@ -180,9 +174,9 @@ namespace Continuous {
     }
 
     
-    VectorXd update(problem& prob, VectorXd& x) override
+    Eigen::VectorXd update(problem& prob, Eigen::VectorXd& x) override
     {
-      VectorXd d = dir(prob, x);
+      Eigen::VectorXd d = dir(prob, x);
       double a = alpha(prob, x, d);
       return x + a*d;
     }
@@ -196,7 +190,7 @@ namespace Continuous {
       : lineSearchSolver(wolfe) {}
 
     // search direction d: steepest descent direction
-    VectorXd dir(problem& prob, VectorXd& x) override
+    Eigen::VectorXd dir(problem& prob, Eigen::VectorXd& x) override
     {
       return - prob.f.grad(x);
     }
@@ -212,13 +206,13 @@ namespace Continuous {
       : lineSearchSolver(wolfe), use_line_search(line_search) {}
     
     // search direction d: the Newton direction
-    VectorXd dir(problem& prob, VectorXd& x) override
+    Eigen::VectorXd dir(problem& prob, Eigen::VectorXd& x) override
     {
       return (prob.f.hesse(x)).colPivHouseholderQr().solve(-(prob.f.grad(x)));
     }
 
     // step size alpha: fixed to 1.0 or obtained with Armijo/Wolfe's method
-    double alpha(problem& prob, VectorXd& x, VectorXd& d) override
+    double alpha(problem& prob, Eigen::VectorXd& x, Eigen::VectorXd& d) override
     {
       return (not use_line_search) ? 1.0 : lineSearchSolver::alpha(prob, x, d);
     }
