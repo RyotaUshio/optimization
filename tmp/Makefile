@@ -21,6 +21,6 @@ main2: main2.o continuous.o
 	$(CXX) $(CXXFLAGS) -c $<
 
 clean:
-	rm *~*.o main
+	rm *~ *.o main main2
 
 .PHONY: all clean
