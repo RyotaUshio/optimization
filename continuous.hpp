@@ -12,6 +12,7 @@ using gradType = std::function<Eigen::VectorXd(Eigen::VectorXd)>;
 using hesseType = std::function<Eigen::MatrixXd(Eigen::VectorXd)>;
 
 
+
 namespace Continuous {
   //// Continuous Optimization Problem ////
   
@@ -89,7 +90,6 @@ namespace Continuous {
       Eigen::VectorXd x = x0;
       while (not converge(prob, x))
 	x = update(prob, x);
-
       return x;
     }
     
@@ -211,7 +211,7 @@ namespace Continuous {
       return (prob.f.hesse(x)).colPivHouseholderQr().solve(-(prob.f.grad(x)));
     }
 
-    // step size alpha: fixed to 1.0 or obtained with Armijo/Wolfe's method
+    // step size alpha
     double alpha(problem& prob, Eigen::VectorXd& x, Eigen::VectorXd& d) override
     {
       return (not use_line_search) ? 1.0 : lineSearchSolver::alpha(prob, x, d);

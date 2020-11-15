@@ -53,7 +53,6 @@ VectorXd iterativeSolver::operator()(problem& prob, VectorXd& x0) // body
   VectorXd x = x0;
   while (not converge(prob, x))
     x = update(prob, x);
-
   return x;
 }
     
@@ -156,7 +155,7 @@ VectorXd NewtonsMethod::dir(problem& prob, VectorXd& x)
   return (prob.f.hesse(x)).colPivHouseholderQr().solve(-(prob.f.grad(x)));
 }
 
-// step size alpha: fixed to 1.0 or obtained with Armijo/Wolfe's method
+// step size alpha
 double NewtonsMethod::alpha(problem& prob, VectorXd& x, VectorXd& d)
 {
   return (not use_line_search) ? 1.0 : lineSearchSolver::alpha(prob, x, d);
