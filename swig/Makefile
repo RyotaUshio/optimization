@@ -20,4 +20,4 @@ continuous_wrap.cxx: continuous.i
 	swig -c++ -python -I$(EIGEN_PATH) $<
 
 clean:
-	rm *.so *.cxx *~ *.py
+	rm *.so *.cxx *~ continuous.py
