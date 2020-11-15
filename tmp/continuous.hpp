@@ -13,16 +13,15 @@ using gradType = std::function<Eigen::VectorXd(Eigen::VectorXd)>;
 using hesseType = std::function<Eigen::MatrixXd(Eigen::VectorXd)>;
 
 
-namespace Continuous {
-  //// Continuous Optimization Problem ////
+namespace Continuous { //// Continuous Optimization Problem ////
+
   
-  struct objFunc {
-    //// objective function class
+  struct objFunc //// objective function class
+  { 
     const funcType func; // objective function itself
     const gradType grad; // gradient
     const hesseType hesse; // Hessian matrix
-
-
+    
     objFunc(funcType f);
     objFunc(funcType f, gradType g);
     objFunc(funcType f, gradType g, hesseType h);
@@ -31,25 +30,23 @@ namespace Continuous {
   };
 
   
-  // base class for constraints
-  struct constraint {};
+  struct constraint {}; //// base class for constraints
 
   
-  // equality constraints
-  struct eqConstraint: public constraint {
+  struct eqConstraint: public constraint //// equality constraints
+  {
     std::vector<funcType> g;
   };
 
 
-  // inequality constraints
-  struct ineqConstraint: public eqConstraint {
+  struct ineqConstraint: public eqConstraint //// inequality constraints
+  {
     std::vector<funcType> h;
   };
 
-  
 
-  // Optimization problem class
-  struct problem {
+  struct problem //// Optimization problem class
+  {
     const objFunc f;
     const constraint* c;
 
@@ -58,25 +55,22 @@ namespace Continuous {
   };
 
 
-
+  struct iterativeSolver
   //// optimization problem solver with iterative method
-  struct iterativeSolver {
-    
+  {
     double eps; // tolerant norm of gradient vector
 
     iterativeSolver();
-
 
     bool converge(problem& prob, Eigen::VectorXd& x); // convergence test
     Eigen::VectorXd operator()(problem& prob, Eigen::VectorXd& x0); // body    
     virtual Eigen::VectorXd update(problem& prob, Eigen::VectorXd& x)=0; // updates approximate solution x
   };
 
-  
 
+  struct lineSearchSolver: public iterativeSolver
   //// base class for solver with line search algorithm
-  struct lineSearchSolver: public iterativeSolver {
-
+  {
     // whether use Wolfe's condition or not
     bool use_wolfe;
     // constants in Wolfe's condition
@@ -85,7 +79,6 @@ namespace Continuous {
     // constants in backtracking
     double rho; // 縮小率
     double alpha0; // initial step size
-
 
     lineSearchSolver(bool wolfe=false);
     virtual Eigen::VectorXd dir(problem& prob, Eigen::VectorXd& x)=0; // computes searching direction
@@ -103,26 +96,28 @@ namespace Continuous {
   };
 
   
+  struct gradientDescent: public lineSearchSolver
   //// Gradient Descent solver class
-  struct gradientDescent: public lineSearchSolver {
-
+  {
     gradientDescent(bool wolfe=false);
     // search direction d: steepest descent direction
     Eigen::VectorXd dir(problem& prob, Eigen::VectorXd& x) override;
   };
 
 
+  struct NewtonsMethod: public lineSearchSolver
   //// Newton's Method solver class
-  struct NewtonsMethod: public lineSearchSolver {
+  {
     bool use_line_search;
     
     NewtonsMethod(bool line_search=false, bool wolfe=false);
+    
     // search direction d: the Newton direction
     Eigen::VectorXd dir(problem& prob, Eigen::VectorXd& x) override;
-    // step size alpha: fixed to 1.0 or obtained with Armijo/Wolfe's method
+    // step size alpha: fixed to 1.0 or Armijo/Wolfe's method
     double alpha(problem& prob, Eigen::VectorXd& x, Eigen::VectorXd& d) override;
   };
-  
 }
+
 
 #endif // __CONTINUOUS_HPP_INCLUDED__

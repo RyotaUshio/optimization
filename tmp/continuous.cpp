@@ -7,17 +7,16 @@
 #include <Eigen/Dense>
 
 using namespace Eigen;
-using namespace Continuous;
+using namespace Continuous; //// Continuous Optimization Problem ////
 
 
-//// Continuous Optimization Problem ////
-  
-
-//// objective function class
+//// objFunc: objective function class
 objFunc::objFunc(funcType f)
   : func(f) {}
+
 objFunc::objFunc(funcType f, gradType g)
   : func(f), grad(g) {}
+
 objFunc::objFunc(funcType f, gradType g, hesseType h)
   : func(f), grad(g), hesse(h) {}
 
@@ -28,15 +27,16 @@ double objFunc::operator()(VectorXd x) const
 
   
 
-// Optimization problem class
+//// problem: Optimization problem class
 problem::problem(objFunc& func)
   : f(func) {}
+
 problem::problem(objFunc& func, constraint& cons)
   : f(func), c(&cons) {}
 
 
 
-//// optimization problem solver with iterative method    
+//// iterativeSolver: optimization problem solver with iterative method    
 iterativeSolver::iterativeSolver()
   : eps(std::pow(10, -8)) {}
 
@@ -47,32 +47,26 @@ bool iterativeSolver::converge(problem& prob, VectorXd& x) // convergence test
   return (grad_norm < eps);
 }
 
-    
 VectorXd iterativeSolver::operator()(problem& prob, VectorXd& x0) // body
 {
   VectorXd x = x0;
   while (not converge(prob, x))
     x = update(prob, x);
   return x;
-}
-    
-//VectorXd iterativeSolver::update(problem& prob, VectorXd& x); // updates approximate solution x
+}   
 
-  
+
 
 //// base class for solver with line search algorithm
 lineSearchSolver::lineSearchSolver(bool wolfe)
   : c1(0.0001), c2(0.9), rho(0.5), alpha0(1.0), use_wolfe(wolfe) {}
 
-    
-//VectorXd lineSearchSolver::dir(problem& prob, VectorXd& x); // computes searching direction
 
 // step size alpha
 double lineSearchSolver::alpha(problem& prob, VectorXd& x, VectorXd& d)
 {
   return use_wolfe ? alpha_wolfe(prob, x, d) : alpha_armijo(prob, x, d);
-}
-    
+}   
 
 // Armijo's condition
 bool lineSearchSolver::Armijo(problem& prob, VectorXd& x, double a, VectorXd& d)
@@ -82,7 +76,6 @@ bool lineSearchSolver::Armijo(problem& prob, VectorXd& x, double a, VectorXd& d)
   rhs = prob.f(x) + c1*a*(prob.f.grad(x)).dot(d);
   return lhs <= rhs;
 }
-
     
 // curvature condition of Wolfe's condition
 bool lineSearchSolver::curvature_condition(problem& prob, VectorXd& x, double a, VectorXd& d)
@@ -92,7 +85,6 @@ bool lineSearchSolver::curvature_condition(problem& prob, VectorXd& x, double a,
   rhs = (prob.f.grad(x)).dot(d) * c2;
   return lhs >= rhs;
 }
-
 
 // backtracking
 double lineSearchSolver::alpha_armijo(problem& prob, VectorXd& x, VectorXd& d)
@@ -123,7 +115,7 @@ double lineSearchSolver::alpha_wolfe(problem& prob, VectorXd& x, VectorXd& d)
     }
 }
 
-    
+// improve approximate solution x for the next step of iteration
 VectorXd lineSearchSolver::update(problem& prob, VectorXd& x)
 {
   VectorXd d = dir(prob, x);
@@ -160,4 +152,3 @@ double NewtonsMethod::alpha(problem& prob, VectorXd& x, VectorXd& d)
 {
   return (not use_line_search) ? 1.0 : lineSearchSolver::alpha(prob, x, d);
 }
-
