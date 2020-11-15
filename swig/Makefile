@@ -3,12 +3,13 @@ PYTHON_VERSION = 3.6
 UNAME := $(shell uname)
 ifeq ($(UNAME), Linux)
 EIGEN_PATH = /usr/include/eigen3
+PYTHON_INCLUDE_PATH = /usr/include/python$(PYTHON_VERSION)
 endif
 ifeq ($(UNAME), Darwin)
 EIGEN_PATH = /usr/local/include/eigen3
+PYTHON_INCLUDE_PATH = /Users/ryotaushio/.pyenv/versions/anaconda3-2019.07/include/python3.7m
 endif
 
-PYTHON_INCLUDE_PATH = /usr/include/python$(PYTHON_VERSION)
 CXX = g++
 
 
