@@ -2,6 +2,7 @@
 #include <iostream>
 #include <functional>
 #include <vector>
+#include <exception>
 #include <cmath>
 #include <cstdio>
 #include <Eigen/Dense>
@@ -144,7 +145,16 @@ NewtonsMethod::NewtonsMethod(bool line_search, bool wolfe)
 // search direction d: the Newton direction
 VectorXd NewtonsMethod::dir(problem& prob, VectorXd& x)
 {
-  return (prob.f.hesse(x)).colPivHouseholderQr().solve(-(prob.f.grad(x)));
+  try
+    {
+      return (prob.f.hesse(x)).colPivHouseholderQr().solve(-(prob.f.grad(x)));
+    }
+  catch(std::exception& e)
+    {
+      std::cerr << "Continuous::NewtonsMethod::dir(): Cannot solve the Newton equaion"
+		<< std::endl;
+      std::cerr << e.what() << std::endl;
+    }
 }
 
 // step size alpha
