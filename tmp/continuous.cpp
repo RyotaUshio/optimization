@@ -128,7 +128,7 @@ VectorXd lineSearchSolver::update(problem& prob, VectorXd& x)
   double a = alpha(prob, x, d);
   VectorXd x_new = x + a*d;
   if (log)
-    logout << x_new.transpose() << "\t" << a << std::endl;
+    logout << x_new.transpose() << " " << a << std::endl;
   return x_new;
 }
 
