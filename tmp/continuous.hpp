@@ -4,6 +4,8 @@
 #include <iostream>
 #include <functional>
 #include <vector>
+#include <string>
+#include <fstream>
 #include <cmath>
 #include <cstdio>
 #include <Eigen/Dense>
@@ -79,8 +81,14 @@ namespace Continuous { //// Continuous Optimization Problem ////
     // constants in backtracking
     double rho; // 縮小率
     double alpha0; // initial step size
+    // output a log file
+    bool log;
+    std::string logname;
+    std::ofstream logout;
+    
 
     lineSearchSolver(bool wolfe=false);
+    lineSearchSolver(const char* filename, bool wolfe=false);
     virtual Eigen::VectorXd dir(problem& prob, Eigen::VectorXd& x)=0; // computes searching direction
     // step size alpha
     virtual double alpha(problem& prob, Eigen::VectorXd& x, Eigen::VectorXd& d);
@@ -100,6 +108,7 @@ namespace Continuous { //// Continuous Optimization Problem ////
   //// Gradient Descent solver class
   {
     gradientDescent(bool wolfe=false);
+    gradientDescent(const char* filename, bool wolfe=false);
     // search direction d: steepest descent direction
     Eigen::VectorXd dir(problem& prob, Eigen::VectorXd& x) override;
   };
@@ -111,6 +120,7 @@ namespace Continuous { //// Continuous Optimization Problem ////
     bool use_line_search;
     
     NewtonsMethod(bool line_search=false, bool wolfe=false);
+    NewtonsMethod(const char* filename, bool line_search=false, bool wolfe=false);
     
     // search direction d: the Newton direction
     Eigen::VectorXd dir(problem& prob, Eigen::VectorXd& x) override;
@@ -127,7 +137,9 @@ namespace Continuous { //// Continuous Optimization Problem ////
     
   public:
     quasiNewtonMethod(Eigen::MatrixXd H0, std::string method="BFGS", bool wolfe=true);
-    
+    quasiNewtonMethod(const char* filename, Eigen::MatrixXd H0, std::string method="BFGS", bool wolfe=true);
+
+    void set_H(Eigen::MatrixXd H0);
     void set_hesse_method(std::string method);
     Eigen::VectorXd dir(problem& prob, Eigen::VectorXd& x) override; // search direction d
     void BFGS (problem& prob, Eigen::VectorXd& x_old, Eigen::VectorXd& x_new); // update H with the BFGS formula

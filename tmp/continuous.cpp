@@ -60,8 +60,15 @@ VectorXd iterativeSolver::operator()(problem& prob, VectorXd& x0) // body
 
 //// base class for solver with line search algorithm
 lineSearchSolver::lineSearchSolver(bool wolfe)
-  : c1(0.0001), c2(0.9), rho(0.5), alpha0(1.0), use_wolfe(wolfe) {}
+  : c1(0.0001), c2(0.9), rho(0.5), alpha0(1.0), use_wolfe(wolfe), log(false) {}
 
+lineSearchSolver::lineSearchSolver(const char* filename, bool wolfe)
+  : lineSearchSolver(wolfe)
+{
+  log = true;
+  logname = filename;
+  logout.open(filename, std::ios::out);
+}
 
 // step size alpha
 double lineSearchSolver::alpha(problem& prob, VectorXd& x, VectorXd& d)
@@ -119,7 +126,10 @@ VectorXd lineSearchSolver::update(problem& prob, VectorXd& x)
 {
   VectorXd d = dir(prob, x);
   double a = alpha(prob, x, d);
-  return x + a*d;
+  VectorXd x_new = x + a*d;
+  if (log)
+    logout << x_new.transpose() << " " << a << std::endl;;
+  return x_new;
 }
 
 
@@ -127,6 +137,9 @@ VectorXd lineSearchSolver::update(problem& prob, VectorXd& x)
 //// Gradient Descent solver class
 gradientDescent::gradientDescent(bool wolfe)
   : lineSearchSolver(wolfe) {}
+
+gradientDescent::gradientDescent(const char* filename, bool wolfe)
+  : lineSearchSolver(filename, wolfe) {}
 
 // search direction d: steepest descent direction
 VectorXd gradientDescent::dir(problem& prob, VectorXd& x)
@@ -139,7 +152,10 @@ VectorXd gradientDescent::dir(problem& prob, VectorXd& x)
 //// Newton's Method solver class
 NewtonsMethod::NewtonsMethod(bool line_search, bool wolfe)
   : lineSearchSolver(wolfe), use_line_search(line_search) {}
-    
+
+NewtonsMethod::NewtonsMethod(const char* filename, bool line_search, bool wolfe)
+  : lineSearchSolver(filename, wolfe), use_line_search(line_search) {}
+
 // search direction d: the Newton direction
 VectorXd NewtonsMethod::dir(problem& prob, VectorXd& x)
 {
@@ -158,6 +174,19 @@ double NewtonsMethod::alpha(problem& prob, VectorXd& x, VectorXd& d)
 quasiNewtonMethod::quasiNewtonMethod(Eigen::MatrixXd H0, std::string method, bool wolfe)
   : lineSearchSolver(wolfe)
 {
+  set_H(H0);
+  set_hesse_method(method);
+}
+
+quasiNewtonMethod::quasiNewtonMethod(const char* filename, Eigen::MatrixXd H0, std::string method, bool wolfe)
+  : lineSearchSolver(filename, wolfe)
+{
+  set_H(H0);
+  set_hesse_method(method);
+}
+
+void quasiNewtonMethod::set_H(Eigen::MatrixXd H0)
+{
   if (H0.rows() != H0.cols())
     {
       std::cerr << "Continuous::quasiNewtonMethod::quasiNewtonMethod(): "
@@ -166,7 +195,6 @@ quasiNewtonMethod::quasiNewtonMethod(Eigen::MatrixXd H0, std::string method, boo
       std::exit(1);
     }
   H = H0;
-  set_hesse_method(method);
 }
 
 void quasiNewtonMethod::set_hesse_method(std::string method)

@@ -1,6 +1,7 @@
 #include "continuous.hpp"
 #include <Eigen/Core>
 #include <iostream>
+#include <fstream>
 
 using namespace Continuous;
 using namespace Eigen;
@@ -43,10 +44,11 @@ int main()
 
 
   problem prob(f);
-  //gradientDescent solver;
-  //NewtonsMethod solver(true, true);
+  //gradientDescent solver("log.out");
+  //NewtonsMethod solver("log.out", true, true);
   MatrixXd H0 = MatrixXd::Identity(2, 2);
-  quasiNewtonMethod solver(H0);
+  quasiNewtonMethod solver("log.out", H0);
+  
   VectorXd x_star = solver(prob, x0);
   std::cout << x_star << std::endl;
 }

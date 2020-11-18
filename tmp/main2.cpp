@@ -9,7 +9,7 @@ using namespace Eigen;
 int main()
 {
   // dimension of x \in R^n
-  int n = 100;
+  int n = 2;
   
   // initial guess
   VectorXd x0 = VectorXd::Constant(n, 5);
