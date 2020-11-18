@@ -58,10 +58,14 @@ int main()
   
   objFunc g_n = g(n);
   problem prob(g_n);
-  //gradienDescent solver(true);
-  //NewtonsMethod solver(true, false);
+
+  gradientDescent grad_solver("gradient_descent_log2.out");
+  NewtonsMethod newton_solver("newtons_method_log2.out");
   MatrixXd H0 = MatrixXd::Identity(n, n);
-  quasiNewtonMethod solver(H0);
-  VectorXd x_star = solver(prob, x0);
-  std::cout << x_star << std::endl;
+  quasiNewtonMethod quasi_newton_solver("quasi_newton_method_log2.out", H0);
+  
+  VectorXd
+    x_star_grad = grad_solver(prob, x0),
+    x_star_newton = newton_solver(prob, x0),
+    x_star_quasi_newton = quasi_newton_solver(prob, x0);
 }
