@@ -4,6 +4,7 @@
 
 #include <functional>
 #include <vector>
+#include <string>
 #include <cmath>
 #include <Eigen/Dense>
 
@@ -94,6 +95,12 @@ namespace Continuous {
     }
     
     virtual Eigen::VectorXd update(problem& prob, Eigen::VectorXd& x)=0; // updates approximate solution x
+
+    virtual void update_attributes(problem& prob,
+				   Eigen::VectorXd& x_old,
+				   Eigen::VectorXd& x_new) // update solver's attributes every step, if neccessary
+    {}
+    
   };
 
   
@@ -178,7 +185,9 @@ namespace Continuous {
     {
       Eigen::VectorXd d = dir(prob, x);
       double a = alpha(prob, x, d);
-      return x + a*d;
+      Eigen::VectorXd x_new = x + a*d;
+      update_attributes(prob, x, x_new);
+      return x_new;
     }
   };
 
@@ -217,7 +226,73 @@ namespace Continuous {
       return (not use_line_search) ? 1.0 : lineSearchSolver::alpha(prob, x, d);
     }
   };
-  
+
+
+    //// Quasi-Newton Method solver class
+  class quasiNewtonMethod: public lineSearchSolver {
+  private:
+    std::string hesse_method; // Hessian approximation: BFGS or DFP
+    Eigen::MatrixXd H;
+    
+  public:
+    quasiNewtonMethod(Eigen::MatrixXd H0, std::string method="BFGS", bool wolfe=true)
+      : lineSearchSolver(wolfe)//, H(H0), set_hesse_method(method)
+    {
+      if (H0.rows() != H0.cols())
+	{
+	  std::cerr << "Continuous::quasiNewtonMethod::quasiNewtonMethod(): "
+		    << "H0 must be a square matrix"
+		    << std::endl;
+	  std::exit(1);
+	}
+      H = H0;
+      set_hesse_method(method);
+    }
+
+    void set_hesse_method(std::string method)
+    {
+      if (method != "BFGS" and method != "DFP")
+	{
+	  std::cerr << "Continuous::quasiNewtonMethod::set_hesse_method(): "
+		    << "Hessian approximation method must be \"BFGS\" or \"DFP\""
+		    << std::endl;
+	  std::exit(1);
+	}
+      hesse_method = method;
+    }
+    
+    // search direction d
+    Eigen::VectorXd dir(problem& prob, Eigen::VectorXd& x) override
+    {
+      return -H*prob.f.grad(x);
+    }
+
+    // update solver's attributes every step, if neccessary
+    void update_attributes(problem& prob, Eigen::VectorXd& x_old, Eigen::VectorXd& x_new) override
+    {
+      H = (hesse_method == "BFGS") ? BFGS(prob, x_old, x_new) : DFP(prob, x_old, x_new);
+    }
+
+    Eigen::MatrixXd BFGS(problem& prob, Eigen::VectorXd& x_old, Eigen::VectorXd& x_new)
+    {
+      Eigen::VectorXd
+	s = x_new - x_old,
+	y = prob.f.grad(x_new) - prob.f.grad(x_old);
+      int dim = H.rows(); // dimension of H
+      double denom = s.dot(y);
+      Eigen::MatrixXd tmp = Eigen::MatrixXd::Identity(dim, dim) - y*(s.transpose()) / denom;
+      return (tmp.transpose())*H*tmp + s*(s.transpose())/denom;
+    }
+
+    Eigen::MatrixXd DFP(problem& prob, Eigen::VectorXd& x_old, Eigen::VectorXd& x_new)
+    {
+      Eigen::VectorXd
+	s = x_new - x_old,
+	y = prob.f.grad(x_new) - prob.f.grad(x_old);
+      return H - H*y*(y.transpose())*H/(y.dot(H*y)) + s*(s.transpose())/(y.dot(s));
+    }
+  };
+    
 }
 
 #endif // __CONTINUOUS_HPP_INCLUDED__

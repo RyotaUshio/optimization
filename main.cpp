@@ -42,7 +42,9 @@ int main()
 
   problem prob(f);
   //gradientDescent solver;
-  NewtonsMethod solver(true, true);
+  //NewtonsMethod solver(true, true);
+  MatrixXd H0 = MatrixXd::Identity(2, 2);
+  quasiNewtonMethod solver(H0);
   VectorXd x_star = solver(prob, x0);
   std::cout << x_star << std::endl;
 }
