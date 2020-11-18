@@ -6,7 +6,7 @@
 #include <vector>
 #include <cmath>
 #include <cstdio>
-#include <Eigen/Dense>
+#include <../eigen3/Eigen/Dense>
 
 using funcType = std::function<double(Eigen::VectorXd)>;
 using gradType = std::function<Eigen::VectorXd(Eigen::VectorXd)>;
@@ -62,7 +62,7 @@ namespace Continuous { //// Continuous Optimization Problem ////
 
     iterativeSolver();
 
-    bool converge(problem& prob, Eigen::VectorXd& x); // convergence test
+    bool converge(problem& prob, Eigen::VectorXd& x) const; // convergence test
     Eigen::VectorXd operator()(problem& prob, Eigen::VectorXd& x0); // body    
     virtual Eigen::VectorXd update(problem& prob, Eigen::VectorXd& x)=0; // updates approximate solution x
   };
@@ -85,9 +85,9 @@ namespace Continuous { //// Continuous Optimization Problem ////
     // step size alpha
     virtual double alpha(problem& prob, Eigen::VectorXd& x, Eigen::VectorXd& d);
     // Armijo's condition
-    bool Armijo(problem& prob, Eigen::VectorXd& x, double a, Eigen::VectorXd& d);
+    bool Armijo(problem& prob, Eigen::VectorXd& x, double a, Eigen::VectorXd& d) const;
     // curvature condition of Wolfe's condition
-    bool curvature_condition(problem& prob, Eigen::VectorXd& x, double a, Eigen::VectorXd& d);
+    bool curvature_condition(problem& prob, Eigen::VectorXd& x, double a, Eigen::VectorXd& d) const;
     // backtracking
     double alpha_armijo(problem& prob, Eigen::VectorXd& x, Eigen::VectorXd& d);
     // return alpha that satisfying Wolfe's condition
@@ -116,6 +116,23 @@ namespace Continuous { //// Continuous Optimization Problem ////
     Eigen::VectorXd dir(problem& prob, Eigen::VectorXd& x) override;
     // step size alpha: fixed to 1.0 or Armijo/Wolfe's method
     double alpha(problem& prob, Eigen::VectorXd& x, Eigen::VectorXd& d) override;
+  };
+
+
+  //// Quasi-Newton Method solver class
+  class quasiNewtonMethod: public lineSearchSolver {
+  private:
+    std::string hesse_method; // Hessian approximation: BFGS or DFP
+    Eigen::MatrixXd H;
+    
+  public:
+    quasiNewtonMethod(Eigen::MatrixXd H0, std::string method="BFGS", bool wolfe=true);
+    
+    void set_hesse_method(std::string method);
+    Eigen::VectorXd dir(problem& prob, Eigen::VectorXd& x) override; // search direction d
+    void BFGS (problem& prob, Eigen::VectorXd& x_old, Eigen::VectorXd& x_new); // update H with the BFGS formula
+    void DFP(problem& prob, Eigen::VectorXd& x_old, Eigen::VectorXd& x_new); // update H with the DFP formula
+    Eigen::VectorXd update(problem& prob, Eigen::VectorXd& x) override;
   };
 }
 

@@ -42,7 +42,7 @@ iterativeSolver::iterativeSolver()
   : eps(std::pow(10, -8)) {}
 
 
-bool iterativeSolver::converge(problem& prob, VectorXd& x) // convergence test
+bool iterativeSolver::converge(problem& prob, VectorXd& x) const // convergence test
 {
   double grad_norm = (prob.f.grad(x)).norm();
   return (grad_norm < eps);
@@ -70,20 +70,20 @@ double lineSearchSolver::alpha(problem& prob, VectorXd& x, VectorXd& d)
 }   
 
 // Armijo's condition
-bool lineSearchSolver::Armijo(problem& prob, VectorXd& x, double a, VectorXd& d)
+bool lineSearchSolver::Armijo(problem& prob, VectorXd& x, double a, VectorXd& d) const
 {
-  double lhs, rhs;
-  lhs = prob.f(x + a*d);
-  rhs = prob.f(x) + c1*a*(prob.f.grad(x)).dot(d);
+  double
+    lhs = prob.f(x + a*d),
+    rhs = prob.f(x) + c1*a*(prob.f.grad(x)).dot(d);
   return lhs <= rhs;
 }
     
 // curvature condition of Wolfe's condition
-bool lineSearchSolver::curvature_condition(problem& prob, VectorXd& x, double a, VectorXd& d)
+bool lineSearchSolver::curvature_condition(problem& prob, VectorXd& x, double a, VectorXd& d) const
 {
-  double lhs, rhs;
-  lhs = (prob.f.grad(x + a*d)).dot(d);
-  rhs = (prob.f.grad(x)).dot(d) * c2;
+  double
+    lhs = (prob.f.grad(x + a*d)).dot(d),
+    rhs = (prob.f.grad(x)).dot(d) * c2;
   return lhs >= rhs;
 }
 
@@ -99,11 +99,9 @@ double lineSearchSolver::alpha_armijo(problem& prob, VectorXd& x, VectorXd& d)
 // return alpha that satisfying Wolfe's condition
 double lineSearchSolver::alpha_wolfe(problem& prob, VectorXd& x, VectorXd& d)
 {
-  double amin = 0;
-  double amax = alpha0;
+  double amin = 0, amax = alpha0, a;
   while (Armijo(prob, x, amax, d))
     amax *= 2.0;
-  double a;
   while (true)
     {
       a = (amin + amax) / 2.0;
@@ -152,4 +150,69 @@ VectorXd NewtonsMethod::dir(problem& prob, VectorXd& x)
 double NewtonsMethod::alpha(problem& prob, VectorXd& x, VectorXd& d)
 {
   return (not use_line_search) ? 1.0 : lineSearchSolver::alpha(prob, x, d);
+}
+
+
+
+//// Quasi-Newton Method solver class
+quasiNewtonMethod::quasiNewtonMethod(Eigen::MatrixXd H0, std::string method, bool wolfe)
+  : lineSearchSolver(wolfe)//, H(H0), set_hesse_method(method)
+{
+  if (H0.rows() != H0.cols())
+    {
+      std::cerr << "Continuous::quasiNewtonMethod::quasiNewtonMethod(): "
+		<< "H0 must be a square matrix"
+		<< std::endl;
+      std::exit(1);
+    }
+  H = H0;
+  set_hesse_method(method);
+}
+
+void quasiNewtonMethod::set_hesse_method(std::string method)
+{
+  if (method != "BFGS" and method != "DFP")
+	{
+	  std::cerr << "Continuous::quasiNewtonMethod::set_hesse_method(): "
+		    << "Hessian approximation method must be \"BFGS\" or \"DFP\""
+		    << std::endl;
+	  std::exit(1);
+	}
+  hesse_method = method;
+}
+
+// search direction d
+Eigen::VectorXd quasiNewtonMethod::dir(problem& prob, Eigen::VectorXd& x)
+{
+  return -H*prob.f.grad(x);
+}
+
+// update H with the BFGS formula
+void quasiNewtonMethod::BFGS (problem& prob, Eigen::VectorXd& x_old, Eigen::VectorXd& x_new)
+{
+  Eigen::VectorXd
+	s = x_new - x_old,
+	y = prob.f.grad(x_new) - prob.f.grad(x_old);
+  int dim = H.rows(); // dimension of H
+  double denom = s.dot(y);
+  Eigen::MatrixXd tmp = Eigen::MatrixXd::Identity(dim, dim) - y*(s.transpose()) / denom;
+  H = (tmp.transpose())*H*tmp + s*(s.transpose())/denom;
+}
+
+// update H with the DFP formula
+void quasiNewtonMethod::DFP(problem& prob, Eigen::VectorXd& x_old, Eigen::VectorXd& x_new)
+{
+  Eigen::VectorXd
+	s = x_new - x_old,
+	y = prob.f.grad(x_new) - prob.f.grad(x_old);
+  H = H - H*y*(y.transpose())*H/(y.dot(H*y)) + s*(s.transpose())/(y.dot(s));
+}
+
+Eigen::VectorXd quasiNewtonMethod::update(problem& prob, Eigen::VectorXd& x)
+{
+  // update x
+  Eigen::VectorXd x_new = lineSearchSolver::update(prob, x);
+  // update H
+  (hesse_method == "BFGS") ? BFGS(prob, x, x_new) : DFP(prob, x, x_new);
+  return x_new;
 }
