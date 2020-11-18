@@ -9,7 +9,11 @@ endif
 CXX = g++
 CXXFLAGS = -std=c++17 -O3 -I$(EIGEN_PATH) -g
 
-all: main main2
+all: main main2 run
+
+run: main main2
+	./main
+	./main2
 
 main: main.o continuous.o
 	$(CXX) $(CXXFLAGS) -o $@ $^
@@ -23,4 +27,4 @@ main2: main2.o continuous.o
 clean:
 	rm *~ *.o main main2
 
-.PHONY: all clean
+.PHONY: all clean run

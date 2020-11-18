@@ -23,10 +23,10 @@ def hesse(x):
     return np.array([[2.0]])
 
 
-# # これらを用いてobjFuncオブジェクトを生成する
-# f = cont.objFunc(func, grad, hesse)
-# # 最適化問題オブジェクトを生成
-# prob = cont.problem(f)
+# これらを用いてobjFuncオブジェクトを生成する
+f = cont.objFunc(func, grad, hesse)
+# 最適化問題オブジェクトを生成
+prob = cont.problem(f)
 
 # 初期点を設定
 x0 = np.array([0.0])
