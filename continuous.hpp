@@ -175,7 +175,7 @@ namespace Continuous {
     }
 
     
-    virtual Eigen::VectorXd update(problem& prob, Eigen::VectorXd& x) override
+    Eigen::VectorXd update(problem& prob, Eigen::VectorXd& x) override
     {
       Eigen::VectorXd d = dir(prob, x);
       double a = alpha(prob, x, d);
@@ -228,7 +228,7 @@ namespace Continuous {
     
   public:
     quasiNewtonMethod(Eigen::MatrixXd H0, std::string method="BFGS", bool wolfe=true)
-      : lineSearchSolver(wolfe)//, H(H0), set_hesse_method(method)
+      : lineSearchSolver(wolfe)
     {
       if (H0.rows() != H0.cols())
 	{
@@ -290,5 +290,6 @@ namespace Continuous {
     }
   };    
 }
+
 
 #endif // __CONTINUOUS_HPP_INCLUDED__

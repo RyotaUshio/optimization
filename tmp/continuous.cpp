@@ -156,7 +156,7 @@ double NewtonsMethod::alpha(problem& prob, VectorXd& x, VectorXd& d)
 
 //// Quasi-Newton Method solver class
 quasiNewtonMethod::quasiNewtonMethod(Eigen::MatrixXd H0, std::string method, bool wolfe)
-  : lineSearchSolver(wolfe)//, H(H0), set_hesse_method(method)
+  : lineSearchSolver(wolfe)
 {
   if (H0.rows() != H0.cols())
     {

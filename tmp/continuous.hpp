@@ -6,7 +6,7 @@
 #include <vector>
 #include <cmath>
 #include <cstdio>
-#include <../eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 
 using funcType = std::function<double(Eigen::VectorXd)>;
 using gradType = std::function<Eigen::VectorXd(Eigen::VectorXd)>;
