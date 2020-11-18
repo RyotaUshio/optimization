@@ -44,11 +44,13 @@ int main()
 
 
   problem prob(f);
-  //gradientDescent solver("log.out");
-  //NewtonsMethod solver("log.out", true, true);
+  gradientDescent grad_solver("gradient_descent_log.out");
+  NewtonsMethod newton_solver("newtons_method_log.out");
   MatrixXd H0 = MatrixXd::Identity(2, 2);
-  quasiNewtonMethod solver("log.out", H0);
+  quasiNewtonMethod quasi_newton_solver("quasi_newton_method_log.out", H0);
   
-  VectorXd x_star = solver(prob, x0);
-  std::cout << x_star << std::endl;
+  VectorXd
+    x_star_grad = grad_solver(prob, x0),
+    x_star_newton = newton_solver(prob, x0),
+    x_star_quasi_newton = quasi_newton_solver(prob, x0);
 }
