@@ -95,12 +95,6 @@ namespace Continuous {
     }
     
     virtual Eigen::VectorXd update(problem& prob, Eigen::VectorXd& x)=0; // updates approximate solution x
-
-    // virtual void update_attributes(problem& prob,
-    // 				   Eigen::VectorXd& x_old,
-    // 				   Eigen::VectorXd& x_new) // update solver's attributes every step, if neccessary
-    // {}
-    
   };
 
   
