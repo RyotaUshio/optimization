@@ -3,12 +3,74 @@
 #include <functional>
 #include <vector>
 #include <exception>
+#include <limits>
 #include <cmath>
 #include <cstdio>
+#include <cstdlib>
+#include <unistd.h>
 #include <Eigen/Dense>
 
 using namespace Eigen;
 using namespace Continuous; //// Continuous Optimization Problem ////
+
+
+void Continuous::set_x0(VectorXd& x0, int argc, char* argv[]) // set the inital guess x0 from command line
+{
+  int c;
+  double base = 10;
+  double exp = 0;
+  while ((c = getopt(argc, argv, "k:e:b:")) != -1 ) {
+    switch (c)
+      {
+      case 'k':
+	iterativeSolver::k_max = std::atoi(optarg);
+	break;
+      case 'e':
+	exp = std::atof(optarg);
+	break;
+      case 'b':
+	base = std::atof(optarg);
+	break;
+      }
+  }
+  if (exp)
+    iterativeSolver::eps = std::pow(base, exp);
+
+  if (optind > 0)
+    {
+      int i = optind;
+      while ((i < argc) && (argv[i][0] != '-'))	 
+	i++;
+      int x0_argc = i - optind;
+      double buf;
+      
+      if (x0_argc == 1)
+      	{
+      	  for(i=0; i<x0.size(); i++)
+	    {
+	      std::sscanf(argv[optind], "(%lf)", &buf);
+	      x0(i) = buf;//std::atof(argv[optind]);
+	    }
+      	}
+      else
+      	{
+      	  if (x0_argc != x0.size())
+      	    {
+      	      std::cerr << "Continuous::set_x0(): "
+      			<< "Number of command line arguments do not match x0.size()"
+      			<< std::endl;
+      	      std::exit(1);
+      	    }
+
+      	  for(i=0; i<x0.size(); i++)
+	    {
+	      std::sscanf(argv[i+optind], "(%lf)", &buf);
+	      x0(i) = buf;//std::atof(argv[i+optind]);
+	    }
+ 	}
+    }
+}
+
 
 
 //// objFunc: objective function class
@@ -38,21 +100,28 @@ problem::problem(objFunc& func, constraint& cons)
 
 
 //// iterativeSolver: optimization problem solver with iterative method    
-iterativeSolver::iterativeSolver()
-  : eps(std::pow(10, -8)) {}
+iterativeSolver::iterativeSolver() {}
+//  : eps(std::pow(10, -8)) {}
+
+double iterativeSolver::eps = std::pow(10, -8);
+int iterativeSolver::k_max = std::numeric_limits<int>::max();
 
 
 bool iterativeSolver::converge(problem& prob, VectorXd& x) const // convergence test
 {
   double grad_norm = (prob.f.grad(x)).norm();
-  return (grad_norm < eps);
+  return (grad_norm < eps) or (k > k_max);
 }
 
 VectorXd iterativeSolver::operator()(problem& prob, VectorXd& x0) // body
 {
   VectorXd x = x0;
+  k = 0;
   while (not converge(prob, x))
-    x = update(prob, x);
+    {
+      x = update(prob, x);
+      k++;
+    }
   return x;
 }   
 

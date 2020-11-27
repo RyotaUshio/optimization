@@ -6,6 +6,7 @@
 #include <vector>
 #include <string>
 #include <fstream>
+#include <limits>
 #include <cmath>
 #include <cstdio>
 #include <Eigen/Dense>
@@ -16,6 +17,9 @@ using hesseType = std::function<Eigen::MatrixXd(Eigen::VectorXd)>;
 
 
 namespace Continuous { //// Continuous Optimization Problem ////
+
+
+  void set_x0(Eigen::VectorXd& x0, int argc, char* argv[]); // set the inital guess x0 from command line
 
   
   struct objFunc //// objective function class
@@ -60,7 +64,9 @@ namespace Continuous { //// Continuous Optimization Problem ////
   struct iterativeSolver
   //// optimization problem solver with iterative method
   {
-    double eps; // tolerant norm of gradient vector
+    static double eps; // tolerant norm of gradient vector
+    static int k_max; // maximum number of iteration
+    int k;
 
     iterativeSolver();
 

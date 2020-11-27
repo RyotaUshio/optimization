@@ -6,11 +6,12 @@ using namespace Continuous;
 using namespace Eigen;
 
 
-int main()
+int main(int argc, char* argv[])
 {
   // initial guess
   VectorXd x0(2);
-  x0 << 1.2, 1.2;
+  set_x0(x0, argc, argv);
+
   
   // objective function definition
   objFunc f(
@@ -47,9 +48,18 @@ int main()
   NewtonsMethod newton_solver("newtons_method_log.out");
   MatrixXd H0 = MatrixXd::Identity(2, 2);
   quasiNewtonMethod quasi_newton_solver("quasi_newton_method_log.out", H0);
-  
+
+  //iterativeSolver::k_max = 100;
+
   VectorXd
     x_star_grad = grad_solver(prob, x0),
     x_star_newton = newton_solver(prob, x0),
     x_star_quasi_newton = quasi_newton_solver(prob, x0);
+
+  std::cout << "gradientDescent: (" << x_star_grad.transpose() << "), k = "
+  	    << grad_solver.k << std::endl
+  	    << "newtonsMethod: (" << x_star_newton.transpose() << "), k = "
+  	    << newton_solver.k << std::endl
+  	    << "quasiNewtonMethod: (" << x_star_quasi_newton.transpose() << "), k = "
+  	    << quasi_newton_solver.k << std::endl;
 }
