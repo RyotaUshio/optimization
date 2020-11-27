@@ -1,7 +1,6 @@
 #include "continuous.hpp"
 #include <Eigen/Core>
 #include <iostream>
-#include <fstream>
 
 using namespace Continuous;
 using namespace Eigen;
