@@ -48,9 +48,8 @@ int main(int argc, char* argv[])
   gradientDescent grad_solver("gradient_descent_log.out");
   NewtonsMethod newton_solver("newtons_method_log.out");
   MatrixXd H0 = MatrixXd::Identity(2, 2);
+  //MatrixXd H0 = f.hesse(x0);
   quasiNewtonMethod quasi_newton_solver("quasi_newton_method_log.out", H0);
-
-  //iterativeSolver::k_max = 100;
 
   VectorXd
     x_star_grad = grad_solver(prob, x0),
