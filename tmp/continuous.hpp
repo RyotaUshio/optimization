@@ -19,7 +19,7 @@ using hesseType = std::function<Eigen::MatrixXd(Eigen::VectorXd)>;
 namespace Continuous { //// Continuous Optimization Problem ////
 
 
-  void set_x0(Eigen::VectorXd& x0, int argc, char* argv[]); // set the inital guess x0 from command line
+  void parseArgs(Eigen::VectorXd& x0, int argc, char* argv[]); // set the inital guess x0 from command line
 
   
   struct objFunc //// objective function class
@@ -46,6 +46,7 @@ namespace Continuous { //// Continuous Optimization Problem ////
     Eigen::MatrixXd Jacobian(Eigen::VectorXd x) const; // Jacobian matrix of g(x)
 
     eqConstraint(); // default constructor
+    eqConstraint(std::vector<objFunc> funcs);
 
     Eigen::VectorXd operator()(Eigen::VectorXd x) const;
   };
@@ -57,11 +58,14 @@ namespace Continuous { //// Continuous Optimization Problem ////
   };
 
 
+  objFunc makeLagrangian(objFunc& func, eqConstraint& eqcons);
+
+
   struct problem //// Optimization problem class
   {
     const objFunc f; // objective function
-    const eqConstraint g; // equality constraint
-    const objFunc L; // Lagrangian
+    // const eqConstraint g; // equality constraint
+    // const objFunc L; // Lagrangian
 
     problem(objFunc& func);
     problem(objFunc& func, eqConstraint& eqcons);
@@ -98,7 +102,7 @@ namespace Continuous { //// Continuous Optimization Problem ////
     bool log;
     std::string logname;
     std::ofstream logout;
-    static char demiliter;
+    static std::string delimiter;
     
 
     lineSearchSolver(bool wolfe=false);

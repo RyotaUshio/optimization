@@ -14,12 +14,17 @@ using namespace Eigen;
 using namespace Continuous; //// Continuous Optimization Problem ////
 
 
-void Continuous::set_x0(VectorXd& x0, int argc, char* argv[]) // set the inital guess x0 from command line
+void Continuous::parseArgs(VectorXd& x0, int argc, char* argv[])
+// set parameters from command line
+// -k    : k_max
+// -e, -b: eps = b^e
+// -d    : delimiter
+// nonoptargs : x0
 {
   int c;
   double base = 10;
   double exp = 0;
-  while ((c = getopt(argc, argv, "k:e:b:")) != -1 ) {
+  while ((c = getopt(argc, argv, "k:e:b:d:")) != -1 ) {
     switch (c)
       {
       case 'k':
@@ -31,6 +36,8 @@ void Continuous::set_x0(VectorXd& x0, int argc, char* argv[]) // set the inital 
       case 'b':
 	base = std::atof(optarg);
 	break;
+      case 'd':
+	lineSearchSolver::delimiter = optarg;
       }
   }
   if (exp)
@@ -51,7 +58,7 @@ void Continuous::set_x0(VectorXd& x0, int argc, char* argv[]) // set the inital 
       	{
       	  if (x0_argc != x0.size())
       	    {
-      	      std::cerr << "Continuous::set_x0(): "
+      	      std::cerr << "Continuous::parseArgs(): "
       			<< "Number of command line arguments do not match x0.size()"
       			<< std::endl;
       	      std::exit(1);
@@ -93,6 +100,9 @@ double objFunc::operator()(VectorXd x) const
 //// eqConstraint: equality constraints
 eqConstraint::eqConstraint(){} // default constructor
 
+eqConstraint::eqConstraint(std::vector<objFunc> funcs)
+  : func(funcs) {}
+
 MatrixXd eqConstraint::Jacobian(VectorXd x) const// Jacobian matrix of g(x)
 {
   MatrixXd J(func.size(), x.size());
@@ -112,26 +122,52 @@ Eigen::VectorXd eqConstraint::operator()(Eigen::VectorXd x) const
 }
 
 
+objFunc Continuous::makeLagrangian(objFunc& func, eqConstraint& eqcons)
+{
+  objFunc L(
+	    [=](VectorXd x_lambda) -> double
+	    {
+	      int m = eqcons.func.size();
+	      int n = x_lambda.size() - m;
+
+	      VectorXd x = x_lambda.head(n);
+	      VectorXd lambda = x_lambda.tail(m);
+	      // std::cout << "lambda.transpose().size() = "
+	      // 		<< lambda.transpose().size()
+	      // 		<< ", eqcons(x).size() = "
+	      // 		<< eqcons(x).size()
+	      // 		<< std::endl;
+	      return func(x) + lambda.transpose() * eqcons(x);
+	    }, 
+	    [=](VectorXd x_lambda) -> VectorXd
+	    {
+	      int m = eqcons.func.size();
+	      int n = x_lambda.size() - m;
+
+	      VectorXd x = x_lambda.head(n);
+	      VectorXd lambda = x_lambda.tail(m);
+	      // std::cout << "func.grad(x).size() = "
+	      // 		<< func.grad(x).rows() << "x" << func.grad(x).cols()
+	      // 		<< ", eqcons.Jacobian(x).transpose().size() = "
+	      // 		<< eqcons.Jacobian(x).transpose().rows()
+	      // 		<< "x" << eqcons.Jacobian(x).transpose().cols()
+	      // 		<< ", lambda.size() = "
+	      // 		<< lambda.size()
+	      // 		<< std::endl;
+	      return func.grad(x) + eqcons.Jacobian(x).transpose() * lambda;
+	    });
+  return L;
+}
+
+
 
 //// problem: Optimization problem class
 problem::problem(objFunc& func)
   : f(func) {}
 
 problem::problem(objFunc& func, eqConstraint& eqcons)
-  : f(func), g(eqcons),
-    L(
-      [=](VectorXd x_lambda) -> double
-      {
-	VectorXd x = x_lambda.head(x_lambda.size() - this->g.func.size());
-	VectorXd lambda = x_lambda.tail(this->g.func.size());
-	return this->f(x) + lambda.transpose() * this->g(x);
-      }, 
-      [=](VectorXd x_lambda) -> VectorXd
-      {
-	VectorXd x = x_lambda.head(x_lambda.size() - this->g.func.size());
-	VectorXd lambda = x_lambda.tail(this->g.func.size());
-	return this->f.grad(x) + this->g.Jacobian(x).transpose() * lambda;
-      }) {}
+  : f(makeLagrangian(func, eqcons)) {}
+//  : f(func), g(eqcons), L(makeLagrangian(func, eqcons)) {}
 
 
 
@@ -175,7 +211,7 @@ lineSearchSolver::lineSearchSolver(const char* filename, bool wolfe)
   logout.open(filename, std::ios::out);
 }
 
-char lineSearchSolver::demiliter = ',';
+std::string lineSearchSolver::delimiter = ",";
 
 // step size alpha
 double lineSearchSolver::alpha(problem& prob, VectorXd& x, VectorXd& d)
@@ -237,7 +273,7 @@ VectorXd lineSearchSolver::update(problem& prob, VectorXd& x)
   if (log)
     {
       for(int i=0; i<x.size(); i++)
-	logout << x(i) << demiliter;
+	logout << x(i) << delimiter;
        logout << a << std::endl;
     }
   return x_new;
