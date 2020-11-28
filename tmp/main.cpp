@@ -10,6 +10,7 @@ int main(int argc, char* argv[])
 {
   // initial guess
   VectorXd x0(2);
+  x0 << 1.2, 1.2;
   set_x0(x0, argc, argv);
 
   
