@@ -11,7 +11,7 @@ endif
 CXX = g++
 CXXFLAGS = -std=c++17 -O3 -I$(EIGEN_PATH) -g
 
-all: $(TARGET) main2 newton_line_search
+all: $(TARGET) main2 newton_line_search eqConstraint
 
 run: main main2
 	./main
