@@ -66,7 +66,7 @@ namespace Continuous { //// Continuous Optimization Problem ////
   {
     static double eps; // tolerant norm of gradient vector
     static int k_max; // maximum number of iteration
-    int k;
+    int k; // iteration counter
 
     iterativeSolver();
 
