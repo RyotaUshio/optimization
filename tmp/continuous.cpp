@@ -72,6 +72,8 @@ void Continuous::set_x0(VectorXd& x0, int argc, char* argv[]) // set the inital 
 
 
 //// objFunc: objective function class
+objFunc::objFunc() {}
+
 objFunc::objFunc(funcType f)
   : func(f) {}
 
@@ -88,12 +90,48 @@ double objFunc::operator()(VectorXd x) const
 
   
 
+//// eqConstraint: equality constraints
+eqConstraint::eqConstraint(){} // default constructor
+
+MatrixXd eqConstraint::Jacobian(VectorXd x) const// Jacobian matrix of g(x)
+{
+  MatrixXd J(func.size(), x.size());
+
+  for(int i=0; i<func.size(); i++)
+    J.row(i) = func[i].grad(x).transpose();
+  
+  return J;
+}
+
+Eigen::VectorXd eqConstraint::operator()(Eigen::VectorXd x) const
+{
+  VectorXd g(func.size());
+  for(int i=0; i<func.size(); i++)
+    g(i) = func[i](x);
+  return g;
+}
+
+
+
 //// problem: Optimization problem class
 problem::problem(objFunc& func)
   : f(func) {}
 
-problem::problem(objFunc& func, constraint& cons)
-  : f(func), c(&cons) {}
+problem::problem(objFunc& func, eqConstraint& eqcons)
+  : f(func), g(eqcons),
+    L(
+      [=](VectorXd x_lambda) -> double
+      {
+	VectorXd x = x_lambda.head(x_lambda.size() - this->g.func.size());
+	VectorXd lambda = x_lambda.tail(this->g.func.size());
+	return this->f(x) + lambda.transpose() * this->g(x);
+      }, 
+      [=](VectorXd x_lambda) -> VectorXd
+      {
+	VectorXd x = x_lambda.head(x_lambda.size() - this->g.func.size());
+	VectorXd lambda = x_lambda.tail(this->g.func.size());
+	return this->f.grad(x) + this->g.Jacobian(x).transpose() * lambda;
+      }) {}
 
 
 
@@ -136,6 +174,8 @@ lineSearchSolver::lineSearchSolver(const char* filename, bool wolfe)
   logname = filename;
   logout.open(filename, std::ios::out);
 }
+
+char lineSearchSolver::demiliter = ',';
 
 // step size alpha
 double lineSearchSolver::alpha(problem& prob, VectorXd& x, VectorXd& d)
@@ -195,7 +235,11 @@ VectorXd lineSearchSolver::update(problem& prob, VectorXd& x)
   double a = alpha(prob, x, d);
   VectorXd x_new = x + a*d;
   if (log)
-    logout << x.transpose() << " " << a << std::endl;
+    {
+      for(int i=0; i<x.size(); i++)
+	logout << x(i) << demiliter;
+       logout << a << std::endl;
+    }
   return x_new;
 }
 

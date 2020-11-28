@@ -27,7 +27,8 @@ namespace Continuous { //// Continuous Optimization Problem ////
     const funcType func; // objective function itself
     const gradType grad; // gradient
     const hesseType hesse; // Hessian matrix
-    
+
+    objFunc();
     objFunc(funcType f);
     objFunc(funcType f, gradType g);
     objFunc(funcType f, gradType g, hesseType h);
@@ -41,23 +42,29 @@ namespace Continuous { //// Continuous Optimization Problem ////
   
   struct eqConstraint: public constraint //// equality constraints
   {
-    std::vector<funcType> g;
+    std::vector<objFunc> func;
+    Eigen::MatrixXd Jacobian(Eigen::VectorXd x) const; // Jacobian matrix of g(x)
+
+    eqConstraint(); // default constructor
+
+    Eigen::VectorXd operator()(Eigen::VectorXd x) const;
   };
 
 
   struct ineqConstraint: public eqConstraint //// inequality constraints
   {
-    std::vector<funcType> h;
+    std::vector<objFunc> ineqcons;
   };
 
 
   struct problem //// Optimization problem class
   {
-    const objFunc f;
-    const constraint* c;
+    const objFunc f; // objective function
+    const eqConstraint g; // equality constraint
+    const objFunc L; // Lagrangian
 
     problem(objFunc& func);
-    problem(objFunc& func, constraint& cons);
+    problem(objFunc& func, eqConstraint& eqcons);
   };
 
 
@@ -91,6 +98,7 @@ namespace Continuous { //// Continuous Optimization Problem ////
     bool log;
     std::string logname;
     std::ofstream logout;
+    static char demiliter;
     
 
     lineSearchSolver(bool wolfe=false);
