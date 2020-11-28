@@ -36,21 +36,16 @@ void Continuous::set_x0(VectorXd& x0, int argc, char* argv[]) // set the inital 
   if (exp)
     iterativeSolver::eps = std::pow(base, exp);
 
-  if (optind > 0)
+  int x0_argc = argc - optind;
+  int i;
+  if (x0_argc)
     {
-      int i = optind;
-      while ((i < argc) && (argv[i][0] != '-'))	 
-	i++;
-      int x0_argc = i - optind;
-      double buf;
-      
       if (x0_argc == 1)
       	{
       	  for(i=0; i<x0.size(); i++)
-	    {
-	      std::sscanf(argv[optind], "(%lf)", &buf);
-	      x0(i) = buf;//std::atof(argv[optind]);
-	    }
+  	    {
+  	      x0(i) = std::atof(argv[optind]);
+  	    }
       	}
       else
       	{
@@ -63,12 +58,15 @@ void Continuous::set_x0(VectorXd& x0, int argc, char* argv[]) // set the inital 
       	    }
 
       	  for(i=0; i<x0.size(); i++)
-	    {
-	      std::sscanf(argv[i+optind], "(%lf)", &buf);
-	      x0(i) = buf;//std::atof(argv[i+optind]);
-	    }
- 	}
+  	    {
+  	      x0(i) = std::atof(argv[i+optind]);
+  	    }
+  	}
     }
+
+  // std::cout << "x0 = " << x0.transpose() << std::endl;
+  // std::cout << "k_max = " << iterativeSolver::k_max << std::endl;
+  // std::cout << "eps = " << iterativeSolver::eps << std::endl;
 }
 
 
